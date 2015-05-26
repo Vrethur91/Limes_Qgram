@@ -4,11 +4,8 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.logging.Level;
@@ -47,148 +44,25 @@ public class LimesQgram {
     }
 
     public void prepareData(){
+        /*
         ArrayList<String> list = importData();
         ArrayList<String> list1 = getSample(list, 10000);
         ArrayList<String> list2 = getSample(list, 5000);
         
-        runAnalysisA(list1, list2);
-        runAnalysisB(list1, list2);
-    }
-    
-    public void runAnalysisA(ArrayList<String> list1, ArrayList<String> list2) {
-        System.out.println("Analysis A BASIC");
+        saveList("./data/sampleA.txt",list1);
+        saveList("./data/sampleB.txt",list2);
+        */
         
-        QGramComparator comp = new QGramComparator();
-        comp.setFormula(QGramComparator.Formula.JACCARD);
-        comp.setTokenizer(QGramComparator.Tokenizer.BASIC);
-        comp.setQ(q);
-
-        ArrayList<Double> valueList1 = new ArrayList<>();
-
-        long timeStart1 = System.currentTimeMillis();
-
-        for (String string1 : list1) {
-            for (String string2 : list2) {
-                valueList1.add(comp.compare(string1, string2));
-            }
-        }
-
-        long timeEnd1 = System.currentTimeMillis();
-        long timeProcess1 = timeEnd1 - timeStart1;
-        System.out.println("Normal Zeit: " + timeProcess1);
-
-        int overThreshold = 0;
-        for (Double value : valueList1) {
-            if (value >= threshold) {
-                overThreshold++;
-            }
-        }
-        System.out.println("Normal über Threshold: " + overThreshold);
-
-        ArrayList<Double> valueList2 = new ArrayList<>();
-        long timeStart2 = System.currentTimeMillis();
-
-        for (String string1 : list1) {
-            for (String string2 : list2) {
-                if (filterA(string1, string2)) {
-                    valueList2.add(comp.compare(string1, string2));
-                }
-            }
-        }
-
-        long timeEnd2 = System.currentTimeMillis();
-        long timeProcess2 = timeEnd2 - timeStart2;
-        System.out.println("Filter Zeit: " + timeProcess2);
+        ArrayList<String> list1 = loadList("./data/sampleA.txt");
+        ArrayList<String> list2 = loadList("./data/sampleB.txt");
         
-        overThreshold = 0;
-        for (Double value : valueList1) {
-            if (value >= threshold) {
-                overThreshold++;
-            }
-        }
         
-        System.out.println("Filter über Threshold: " + overThreshold);
-    }
-    
-    public void runAnalysisB(ArrayList<String> list1, ArrayList<String> list2) {
-        System.out.println("Analysis B PADDING");
-
-        QGramComparator comp = new QGramComparator();
-        comp.setFormula(QGramComparator.Formula.JACCARD);
-        comp.setTokenizer(QGramComparator.Tokenizer.ENDS);
-        comp.setQ(q);
-
-        ArrayList<Double> valueList1 = new ArrayList<>();
-
-        long timeStart1 = System.currentTimeMillis();
-
-        for (String string1 : list1) {
-            for (String string2 : list2) {
-                valueList1.add(comp.compare(string1, string2));
-            }
-        }
-
-        long timeEnd1 = System.currentTimeMillis();
-        long timeProcess1 = timeEnd1 - timeStart1;
-        System.out.println("Normal Zeit: " + timeProcess1);
-
-        int overThreshold = 0;
-        for (Double value : valueList1) {
-            if (value >= threshold) {
-                overThreshold++;
-            }
-        }
-        System.out.println("Normal über Threshold: " + overThreshold);
-
-        ArrayList<Double> valueList2 = new ArrayList<>();
-        long timeStart2 = System.currentTimeMillis();
-
-        for (String string1 : list1) {
-            for (String string2 : list2) {
-                if (filterB(string1, string2)) {
-                    valueList2.add(comp.compare(string1, string2));
-                }
-            }
-        }
-
-        long timeEnd2 = System.currentTimeMillis();
-        long timeProcess2 = timeEnd2 - timeStart2;
-        System.out.println("Filter Zeit: " + timeProcess2);
-        
-        overThreshold = 0;
-        for (Double value : valueList1) {
-            if (value >= threshold) {
-                overThreshold++;
-            }
-        }
-        
-        System.out.println("Filter über Threshold: " + overThreshold);
-    }
-
-    private boolean filterA(String string1, String string2) {
-        int size1 = string1.length();
-        int size2 = string2.length();
-
-        if (size1 - (q - 1) <= 0 || size2 - (q - 1) <= 0) {
-            return false;
-        }
-
-        if ((Math.min(size1, size2) - (q - 1)) / (Math.max(size1, size2) - (q - 1)) >= threshold) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    private boolean filterB(String string1, String string2) {
-        int size1 = string1.length();
-        int size2 = string2.length();
-
-        if ((Math.min(size1, size2) + (q - 1)) / (Math.max(size1, size2) + (q - 1)) >= threshold) {
-            return true;
-        } else {
-            return false;
-        }
+        FilterTestInterface basicNormal = new FilterTestBasicNormal();
+        basicNormal.runTest(list1, list2, threshold, q);
+        /*
+        FilterTestInterface basicFilter = new FilterTestBasicFilter();
+        basicFilter.runTest(list1, list2, threshold, q);
+                */
     }
 
     private ArrayList<String> getSample(ArrayList<String> list, int size) {
@@ -205,6 +79,36 @@ public class LimesQgram {
         return sampleList;
     }
 
+    private ArrayList<String> loadList(String filepath){
+        ArrayList<String> list = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                list.add(line);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LimesQgram.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return list;
+    }
+    
+    private void saveList(String filepath, ArrayList<String> list){
+        try{
+            File file = new File(filepath);
+            file.createNewFile();
+            BufferedWriter bWriter = new BufferedWriter(new FileWriter(file));
+            bWriter.write("");
+            for(String string:list){
+                bWriter.append(string + "\n");
+            }
+            bWriter.flush();
+            bWriter.close();
+        } catch (Exception ex) {
+            Logger.getLogger(LimesQgram.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
     private ArrayList<String> importData() {
         ArrayList<String> list = new ArrayList<>();
         String filepath = "./data/labels.txt";
