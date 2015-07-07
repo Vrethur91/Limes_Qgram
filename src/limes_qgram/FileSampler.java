@@ -1,4 +1,4 @@
-package FileSampler;
+package limes_qgram;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -19,8 +19,37 @@ import limes_qgram.LimesQgram;
  * @author Bene
  */
 public class FileSampler {
+    
+    private ArrayList<String> preloadedList;
 
-    public ArrayList<String> getSample(ArrayList<String> list, int size) {
+    public void preloadList(String path){
+        preloadedList = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(path), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                preloadedList.add(line);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LimesQgram.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    public ArrayList<String> getSample(int size){
+        ArrayList<String> sampleList = new ArrayList<>();
+        HashSet<Integer> indexSet = new HashSet<>();
+        while (sampleList.size() < size) {
+            int randomIndex = (int) (Math.random() * preloadedList.size());
+            if (!indexSet.contains(randomIndex)) {
+                sampleList.add(preloadedList.get(randomIndex));
+                indexSet.add(randomIndex);
+            }
+        }
+
+        return sampleList;
+    }
+    
+    public ArrayList<String> getSample(String filePath, int size) {
+        ArrayList<String> list = loadList(filePath);
         ArrayList<String> sampleList = new ArrayList<>();
         HashSet<Integer> indexSet = new HashSet<>();
         while (sampleList.size() < size) {
@@ -86,5 +115,19 @@ public class FileSampler {
         } catch (Exception ex) {
             Logger.getLogger(LimesQgram.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public ArrayList<String> loadList(String filepath) {
+        ArrayList<String> list = new ArrayList<>();
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), "UTF-8"))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                list.add(line);
+            }
+        } catch (Exception ex) {
+            Logger.getLogger(LimesQgram.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return list;
     }
 }

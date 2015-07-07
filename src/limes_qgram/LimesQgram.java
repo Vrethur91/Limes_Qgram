@@ -1,15 +1,10 @@
 package limes_qgram;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -26,15 +21,6 @@ public class LimesQgram {
     private Bounds bounds;
     private double threshold;
     private int q;
-
-    public static void main(String[] args) {
-        LimesQgram qgram = new LimesQgram();
-        qgram.setTokenizer(Tokenizer.ENDS);
-        qgram.setValidation(Validation.ENDS);
-        qgram.setBounds(Bounds.ENDS);
-
-        qgram.runBenchmark();
-    }
 
     public LimesQgram() {
         this.bounds = Bounds.NO_BOUNDS;
@@ -65,15 +51,14 @@ public class LimesQgram {
         this.bounds = bounds;
     }
 
-    public void runBenchmark() {
-        ArrayList<String> list1 = loadList("./data/sampleA.txt");
-        ArrayList<String> list2 = loadList("./data/sampleB.txt");
-
+    public double[] computeSimilarities(ArrayList<String> list1, ArrayList<String> list2) {
+        double n = 3.0;
+        int hit = 0;
         long totalTime = 0;
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < n; i++) {
             long timeStart1 = System.currentTimeMillis();
-            int hit = 0;
+            hit = 0;
             if (bounds.equals(Bounds.NO_BOUNDS)) {
                 for (String string1 : list1) {
                     for (String string2 : list2) {
@@ -113,9 +98,11 @@ public class LimesQgram {
             long timeEnd1 = System.currentTimeMillis();
             totalTime += (timeEnd1 - timeStart1);
         }
-
-        double avgTime = totalTime / 10.0;
-        System.out.println("Zeit: " + avgTime);
+        
+        long avgTime = Math.round(totalTime / n);
+        //System.out.println("Zeit: " + avgTime);
+        double[] returnValues = {avgTime, hit};
+        return returnValues;
 
     }
 
@@ -200,20 +187,6 @@ public class LimesQgram {
                 sortByLengthList2.put(string2.length(), labelList);
             }
         }
-    }
-
-    private ArrayList<String> loadList(String filepath) {
-        ArrayList<String> list = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filepath), "UTF-8"))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                list.add(line);
-            }
-        } catch (Exception ex) {
-            Logger.getLogger(LimesQgram.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return list;
     }
 
     private static String pad(String s, int q, boolean front) {
